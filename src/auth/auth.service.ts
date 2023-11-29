@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthDto } from './dto';
 import * as bcrypt from 'bcrypt';
@@ -10,6 +11,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private config: ConfigService,
   ) {}
 
   async signupLocal(dto: AuthDto): Promise<Tokens> {
@@ -43,7 +45,21 @@ export class AuthService {
     return tokens;
   }
 
-  logout() {}
+  async logout(userId: string): Promise<boolean> {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashedRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRt: null,
+      },
+    });
+    return true;
+  }
+
   refreshTokens() {}
 
   async updateRtHash(userId: string, rt: string) {
@@ -70,7 +86,7 @@ export class AuthService {
           email,
         },
         {
-          secret: process.env.JWT_AT_SECRET,
+          secret: this.config.get<string>('JWT_AT_SECRET'),
           expiresIn: 60 * 15,
         },
       ),
@@ -80,7 +96,7 @@ export class AuthService {
           email,
         },
         {
-          secret: process.env.JWT_RT_SECRET,
+          secret: this.config.get<string>('JWT_RT_SECRET'),
           expiresIn: 60 * 60 * 24 * 7,
         },
       ),
