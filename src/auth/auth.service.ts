@@ -43,7 +43,6 @@ export class AuthService {
     return tokens;
   }
 
-  login() {}
   logout() {}
   refreshTokens() {}
 
