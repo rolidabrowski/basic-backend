@@ -9,8 +9,12 @@ import {
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
 import { Tokens } from './types';
-import { AuthGuard } from '@nestjs/passport';
-import { Public, GetCurrentUserId } from 'src/common/decorators';
+import {
+  Public,
+  GetCurrentUserId,
+  GetCurrentUser,
+} from 'src/common/decorators';
+import { RtGuard } from 'src/common/guards';
 
 @Controller('auth')
 export class AuthController {
@@ -36,10 +40,14 @@ export class AuthController {
     return this.authService.logout(userId);
   }
 
-  @UseGuards(AuthGuard('jwt-refresh'))
+  @Public()
+  @UseGuards(RtGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens() {
-    return this.authService.refreshTokens();
+  refreshTokens(
+    @GetCurrentUserId() userId: string,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+  ): Promise<Tokens> {
+    return this.authService.refreshTokens(userId, refreshToken);
   }
 }
