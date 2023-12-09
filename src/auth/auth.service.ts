@@ -1,4 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+  InternalServerErrorException,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -26,8 +32,14 @@ export class AuthService {
       })
       .catch((error) => {
         if (error instanceof PrismaClientKnownRequestError) {
+          if (error.code === 'P2001') {
+            throw new BadRequestException('Invalid data');
+          }
           if (error.code === 'P2002') {
-            throw new ForbiddenException('Credentials incorrect');
+            throw new ConflictException('Email already exists');
+          }
+          if (error.code === 'P5000') {
+            throw new InternalServerErrorException('Internal server error');
           }
         }
         throw error;
