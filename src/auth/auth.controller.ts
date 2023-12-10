@@ -18,7 +18,6 @@ import { Tokens } from './types';
 import { Public, GetCurrentUserId, GetCurrentUser } from '../common/decorators';
 import { RtGuard } from '../common/guards';
 
-@ApiBearerAuth()
 @ApiTags('Authetication')
 @Controller('auth')
 export class AuthController {
@@ -26,7 +25,7 @@ export class AuthController {
 
   @Public()
   @Post('local/signup')
-  @ApiOperation({ summary: 'Signup local' })
+  @ApiOperation({ summary: 'Register' })
   @ApiResponse({
     status: HttpStatus.CREATED,
     type: Tokens,
@@ -50,21 +49,61 @@ export class AuthController {
 
   @Public()
   @Post('local/signin')
-  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: Tokens,
+    description: 'The user has been successfully logged in.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Bad request',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
   signinLocal(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.signinLocal(dto);
   }
 
   @Post('logout')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'The user has been successfully logged out.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
   logout(@GetCurrentUserId() userId: string): Promise<boolean> {
     return this.authService.logout(userId);
   }
 
   @Public()
   @UseGuards(RtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Refresh tokens' })
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: Tokens,
+    description: 'The tokens have been successfully refreshed.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
   refreshTokens(
     @GetCurrentUserId() userId: string,
     @GetCurrentUser('refreshToken') refreshToken: string,
