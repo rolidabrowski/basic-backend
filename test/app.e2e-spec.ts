@@ -71,7 +71,7 @@ describe('AppController (e2e)', () => {
         .auth(tokens.refreshToken, {
           type: 'bearer',
         })
-        .expect(200)
+        .expect(201)
         .expect(({ body }: { body: Tokens }) => {
           expect(body.accessToken).toBeTruthy();
           expect(body.refreshToken).toBeTruthy();
