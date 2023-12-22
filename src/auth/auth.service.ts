@@ -47,6 +47,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refreshToken);
+    await this.updateVtHash(user.id, tokens.verifyToken);
     return tokens;
   }
 
@@ -99,6 +100,18 @@ export class AuthService {
     return tokens;
   }
 
+  async updateVtHash(userId: string, vt: string) {
+    const hash = await argon.hash(vt);
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedVt: hash,
+      },
+    });
+  }
+
   async updateRtHash(userId: string, rt: string) {
     const hash = await argon.hash(rt);
     await this.prisma.user.update({
@@ -117,7 +130,7 @@ export class AuthService {
       email: email,
     };
 
-    const [at, rt] = await Promise.all([
+    const [at, rt, vt] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
         secret: this.config.get<string>('AT_SECRET'),
         expiresIn: '15m',
@@ -126,11 +139,16 @@ export class AuthService {
         secret: this.config.get<string>('RT_SECRET'),
         expiresIn: '7d',
       }),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: this.config.get<string>('VT_SECRET'),
+        expiresIn: '5m',
+      }),
     ]);
 
     return {
       accessToken: at,
       refreshToken: rt,
+      verifyToken: vt,
     };
   }
 }

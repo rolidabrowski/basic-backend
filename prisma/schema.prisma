@@ -18,6 +18,8 @@ model User {
   email String @unique
   hash String
   hashedRt String?
+  hashedVt String?
+  verify Boolean @default(false)
 
   @@map("users")
 }

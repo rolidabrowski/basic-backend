@@ -14,4 +14,11 @@ export class Tokens {
     description: 'Refresh token',
   })
   refreshToken: string;
+
+  @ApiProperty({
+    example:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NTc0YTY0NWI5MGY1ZDVkMGE2ZmQ3YjQiLCJlbWFpbCI6InVzZXJAbWFpbC5jb20iLCJpYXQiOjE3MDIxNDM1NTcsImV4cCI6MTcwMjE0NDQ1N30.IT-ZVUZ1knYy-1C93SlVuSKsoBWwfBXxHSKt-zR1shc',
+    description: 'Verify token',
+  })
+  verifyToken: string;
 }
