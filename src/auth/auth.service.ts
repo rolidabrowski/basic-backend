@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import * as sgMail from '@sendgrid/mail';
 import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
@@ -48,6 +49,7 @@ export class AuthService {
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refreshToken);
     await this.updateVtHash(user.id, tokens.verifyToken);
+    await this.sendVerifyEmail(user.email, user.hashedVt);
     return tokens;
   }
 
@@ -150,5 +152,32 @@ export class AuthService {
       refreshToken: rt,
       verifyToken: vt,
     };
+  }
+
+  async sendVerifyEmail(email: string, hashedVt: string): Promise<boolean> {
+    sgMail.setApiKey(this.config.get<string>('SENDGRID_API_KEY'));
+    const msg = {
+      from: this.config.get<string>('SENDGRID_API_EMAIL'),
+      to: email,
+      subject: 'App - Confirm your email',
+      html: `
+      <p>Hello, ${email}</p>
+      <p>We just need to verify your email address before you can access App.</p>
+      <p>Please click on the link below.</p>
+      <a href="http://localhost:3000/api/user/verify/${hashedVt}">Click here to verify your email</a>`,
+    };
+
+    try {
+      await sgMail.send(msg);
+    } catch (error) {
+      console.error(error);
+
+      if (error.response) {
+        console.error(error.response.body);
+        throw new InternalServerErrorException('Internal server error');
+      }
+    }
+
+    return true;
   }
 }
