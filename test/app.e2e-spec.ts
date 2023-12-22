@@ -43,6 +43,7 @@ describe('AppController (e2e)', () => {
         .expect(({ body }: { body: Tokens }) => {
           expect(body.accessToken).toBeTruthy();
           expect(body.refreshToken).toBeTruthy();
+          expect(body.verifyToken).toBeTruthy();
         });
     });
 
