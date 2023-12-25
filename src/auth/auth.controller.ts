@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -46,6 +48,26 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   signupLocal(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.signupLocal(dto);
+  }
+
+  @Public()
+  @Get('verify/:vt')
+  @ApiOperation({ summary: 'Verify email' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'The user has been successfully verified.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Access Denied',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
+  @HttpCode(HttpStatus.OK)
+  verifyEmail(@Param('vt') vt: string): Promise<boolean> {
+    return this.authService.verifyEmail(vt);
   }
 
   @Public()

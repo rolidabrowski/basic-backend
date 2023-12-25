@@ -16,10 +16,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   email String @unique
-  hash String
-  hashedRt String?
-  hashedVt String?
-  verify Boolean @default(false)
+  hash String @unique
+  hashedRt String? @unique
+  verifyToken String? @unique
+  isVerified Boolean @default(false)
 
   @@map("users")
 }

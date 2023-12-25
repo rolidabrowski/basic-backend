@@ -48,9 +48,31 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refreshToken);
-    await this.updateVtHash(user.id, tokens.verifyToken);
-    await this.sendVerifyEmail(user.email, user.hashedVt);
+    await this.updateVt(user.id, tokens.verifyToken);
+    await this.sendVerifyEmail(user.email, user.verifyToken);
     return tokens;
+  }
+
+  async verifyEmail(vt: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        verifyToken: vt,
+      },
+    });
+    if (!user || !user.verifyToken)
+      throw new ForbiddenException('Access Denied');
+
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        isVerified: true,
+        verifyToken: null,
+      },
+    });
+
+    return true;
   }
 
   async signinLocal(dto: AuthDto): Promise<Tokens> {
@@ -102,14 +124,13 @@ export class AuthService {
     return tokens;
   }
 
-  async updateVtHash(userId: string, vt: string) {
-    const hash = await argon.hash(vt);
+  async updateVt(userId: string, vt: string) {
     await this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        hashedVt: hash,
+        verifyToken: vt,
       },
     });
   }
