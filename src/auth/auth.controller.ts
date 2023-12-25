@@ -15,7 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto';
+import { AuthDto, VerifyDto } from './dto';
 import { Tokens } from './types';
 import { Public, GetCurrentUserId, GetCurrentUser } from '../common/decorators';
 import { RtGuard } from '../common/guards';
@@ -68,6 +68,26 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   verifyEmail(@Param('vt') vt: string): Promise<boolean> {
     return this.authService.verifyEmail(vt);
+  }
+
+  @Public()
+  @Post('verify')
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'The verification email has been successfully resent.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Access Denied',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Internal server error',
+  })
+  @HttpCode(HttpStatus.OK)
+  resendVerifyEmail(@Body() dto: VerifyDto): Promise<boolean> {
+    return this.authService.resendVerifyEmail(dto);
   }
 
   @Public()

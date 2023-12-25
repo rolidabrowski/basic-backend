@@ -11,7 +11,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as sgMail from '@sendgrid/mail';
 import * as argon from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto } from './dto';
+import { AuthDto, VerifyDto } from './dto';
 import { JwtPayload, Tokens } from './types';
 
 @Injectable()
@@ -72,6 +72,19 @@ export class AuthService {
       },
     });
 
+    return true;
+  }
+
+  async resendVerifyEmail(dto: VerifyDto): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (!user) throw new ForbiddenException('Access Denied');
+
+    await this.sendVerifyEmail(user.email, user.verifyToken);
     return true;
   }
 
@@ -175,7 +188,7 @@ export class AuthService {
     };
   }
 
-  async sendVerifyEmail(email: string, hashedVt: string): Promise<boolean> {
+  async sendVerifyEmail(email: string, verifyToken: string): Promise<boolean> {
     sgMail.setApiKey(this.config.get<string>('SENDGRID_API_KEY'));
     const msg = {
       from: this.config.get<string>('SENDGRID_API_EMAIL'),
@@ -185,7 +198,7 @@ export class AuthService {
       <p>Hello, ${email}</p>
       <p>We just need to verify your email address before you can access App.</p>
       <p>Please click on the link below.</p>
-      <a href="http://localhost:3000/api/user/verify/${hashedVt}">Click here to verify your email</a>`,
+      <a href="http://localhost:3000/api/user/verify/${verifyToken}">Click here to verify your email</a>`,
     };
 
     try {
