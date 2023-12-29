@@ -97,6 +97,8 @@ export class AuthService {
 
     if (!user) throw new ForbiddenException('Invalid credentials');
 
+    if (!user.isVerified) throw new ForbiddenException('Email not verified');
+
     const passwordMatches = await argon.verify(user.hash, dto.password);
     if (!passwordMatches) throw new ForbiddenException('Invalid credentials');
 

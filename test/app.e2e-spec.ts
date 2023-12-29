@@ -47,6 +47,25 @@ describe('AppController (e2e)', () => {
         });
     });
 
+    it('should verify email', async () => {
+      const user = await prisma.user.findUnique({
+        where: {
+          email: dto.email,
+        },
+      });
+
+      return request(app.getHttpServer())
+        .get(`/auth/verify/${user.verifyToken}`)
+        .expect(200);
+    });
+
+    it('should resend verify email', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/verify')
+        .send({ email: dto.email })
+        .expect(200);
+    });
+
     it('should signin', () => {
       return request(app.getHttpServer())
         .post('/auth/local/signin')
